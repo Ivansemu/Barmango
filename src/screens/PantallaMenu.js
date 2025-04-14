@@ -4,7 +4,6 @@ import MenuCard from '../components/MenuCard';
 import { useTranslation } from 'react-i18next';
 
 const PantallaMenu = ({ onSeleccionar, filtroCategoria }) => {
-    const [productosFiltrados, setProductosFiltrados] = useState(menuData);
     const [activeCategory, setActiveCategory] = useState('Todos');
     const { t } = useTranslation();
     const [categorias, setCategorias] = useState([]);
@@ -14,14 +13,16 @@ const PantallaMenu = ({ onSeleccionar, filtroCategoria }) => {
         const uniqueCategories = Array.from(new Set(menuData.map((item) => item.categoria)));
         // Se añade la opción "Todos" para mostrar todos los productos
         setCategorias(['Todos', ...uniqueCategories]);
+    }, []); // El array de dependencias vacío asegura que esto solo se ejecute una vez al montar el componente
 
-        // Si se recibe un filtro de categoría, se aplica al cargar el componente
+    useEffect(() => {
+        // Si se recibe un filtro de categoría, se aplica
         if (filtroCategoria && categorias.includes(filtroCategoria)) {
             setActiveCategory(filtroCategoria);
         } else {
-            setActiveCategory('Todos'); // O la categoría por defecto que prefieras
+            setActiveCategory('Todos'); // O la categoría por defecto que prefieras cuando no hay filtro válido
         }
-    }, [filtroCategoria, categorias]);
+    }, [filtroCategoria, categorias]); // Reacciona a cambios en filtroCategoria o en la lista de categorías (aunque esta última no debería cambiar)
 
     // Filtra los productos dependiendo de la categoría activa
     const filteredMenuData =
@@ -43,8 +44,8 @@ const PantallaMenu = ({ onSeleccionar, filtroCategoria }) => {
                         key={cat}
                         onClick={() => setActiveCategory(cat)}
                         className={`flex-shrink-0 px-3 py-1 rounded-md text-sm font-semibold focus:outline-none transition-colors ${activeCategory === cat
-                            ? 'bg-primary-500 text-white'
-                            : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+                                ? 'bg-primary-500 text-white'
+                                : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
                             }`}
                     >
                         {t(cat)}
