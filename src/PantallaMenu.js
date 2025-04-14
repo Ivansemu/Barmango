@@ -1,61 +1,74 @@
-import React, { useState } from 'react';
-import menuData from './data/menu';
+import React, { useEffect, useState } from 'react';
+import menuData from '../data/menu';
+import MenuCard from '../components/MenuCard';
+import { useTranslation } from 'react-i18next';
 
-const PantallaMenu = ({ solicitarConfirmacion }) => {
-    const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('Todas');
-    const categorias = ['Todas', ...new Set(menuData.map(p => p.categoria))];
+const PantallaMenu = ({ onSeleccionar, filtroCategoria }) => {
+  const [activeCategory, setActiveCategory] = useState('Todos');
+  const { t } = useTranslation();
+  const [categorias, setCategorias] = useState([]);
 
-    const filtrarProductos = () => {
-        return categoriaSeleccionada === 'Todas'
-            ? menuData
-            : menuData.filter(p => p.categoria === categoriaSeleccionada);
-    };
+  useEffect(() => {
+    // Se obtienen las categorías únicas del menú
+    const uniqueCategories = Array.from(new Set(menuData.map((item) => item.categoria)));
+    // Se añade la opción "Todos" para mostrar todos los productos
+    setCategorias(['Todos', ...uniqueCategories]);
+  }, []); // El array de dependencias vacío asegura que esto solo se ejecute una vez al montar el componente
 
-    return (
-        <div>
-            <h1 className="text-xl font-bold text-[#BB5030] text-center mb-4">
-                Bienvenido a Bar Manoli II
-            </h1>
+  useEffect(() => {
+    // Si se recibe un filtro de categoría, se aplica
+    if (filtroCategoria && categorias.includes(filtroCategoria)) {
+      setActiveCategory(filtroCategoria);
+    } else {
+      setActiveCategory('Todos'); // O la categoría por defecto que prefieras cuando no hay filtro válido
+    }
+  }, [filtroCategoria, categorias]); // Reacciona a cambios en filtroCategoria o en la lista de categorías (aunque esta última no debería cambiar)
 
-            <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Filtrar por categoría:</label>
-                <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring focus:ring-[#BB5030]/40"
-                    value={categoriaSeleccionada}
-                    onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-                >
-                    {categorias.map((cat) => (
-                        <option key={cat}>{cat}</option>
-                    ))}
-                </select>
-            </div>
+  // Filtra los productos dependiendo de la categoría activa
+  const filteredMenuData =
+    activeCategory === 'Todos'
+      ? menuData
+      : menuData.filter((item) => item.categoria === activeCategory);
 
-            <div className="grid grid-cols-1 gap-4">
-                {filtrarProductos().map((producto) => (
-                    <div
-                        key={producto.ref}
-                        className="bg-white p-4 rounded-xl shadow border border-gray-200"
-                    >
-                        <div className="flex justify-between items-center">
-                            <div>
-                                <h3 className="text-base font-semibold text-[#BB5030]">{producto.producto}</h3>
-                                <p className="text-sm text-gray-600">
-                                    {producto.precio}
-                                    {producto.precio_entera ? ` / ${producto.precio_entera}` : ''}
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => solicitarConfirmacion(producto)}
-                                className="bg-[#BB5030] text-white text-xs px-3 py-1.5 rounded-lg hover:bg-[#9a3d25] transition"
-                            >
-                                Añadir
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
+  return (
+    <div className="py-4">
+      {/* Título del Bar */}
+      <div className="px-4 mb-4 flex justify-center">
+        <h1 className="text-xl sm:text-2xl font-bold text-primary-500">BAR MANOLI II</h1>
+      </div>
+
+      {/* Botones de categoría */}
+      <div className="bg-white shadow-sm rounded-md overflow-x-auto flex gap-2 px-2 py-1 mb-4 sticky top-0 z-10">
+        {categorias.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`flex-shrink-0 px-3 py-1 rounded-md text-sm font-semibold focus:outline-none transition-colors ${
+              activeCategory === cat
+                ? 'bg-primary-500 text-white'
+                : 'bg-neutral-200 text-neutral-700 hover:bg-neutral-300'
+            }`}
+          >
+            {t(cat)}
+          </button>
+        ))}
+      </div>
+
+      {/* Contenido filtrado */}
+      <div className="overflow-y-auto space-y-6 pb-12 pt-2">
+        <div className="px-2">
+          <h2 className="text-primary-500 font-bold text-lg mb-2">
+            {activeCategory !== 'Todos' ? t(activeCategory) : t('Menú Completo')}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredMenuData.map((item) => (
+              <MenuCard key={item.ref} producto={item} onSeleccionar={onSeleccionar} />
+            ))}
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default PantallaMenu;
